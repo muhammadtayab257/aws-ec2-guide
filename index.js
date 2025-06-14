@@ -1,6 +1,10 @@
 const express = require("express");
 const app = express();
-require('dotenv').config();
+const axios = require("axios");
+const os = require("os");
+const { execSync } = require("child_process");
+const used = process.memoryUsage();
+require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
@@ -11,13 +15,6 @@ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-const axios = require("axios");
-const os = require("os");
-const { execSync } = require("child_process");
-
-// Memory usage from Node.js
-const used = process.memoryUsage();
-
 // OS-Level Memory & CPU
 const totalMem = Math.round(os.totalmem() / 1024 / 1024);
 const freeMem = Math.round(os.freemem() / 1024 / 1024);
@@ -25,33 +22,11 @@ const cpuLoad = os.loadavg();
 const uptime = Math.round(os.uptime() / 60); // in minutes
 
 // AWS EC2 Metadata (optional, only if you have access)
-let instanceId = "Unknown";
-let instanceType = "Unknown";
-let region = "Unknown";
 
-try {
-  instanceId = execSync(
-    "curl -s http://169.254.169.254/latest/meta-data/instance-id"
-  ).toString();
-  instanceType = execSync(
-    "curl -s http://169.254.169.254/latest/meta-data/instance-type"
-  ).toString();
-  region = execSync(
-    "curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region"
-  )
-    .toString()
-    .split(":")[1]
-    .replace(/[" ,]/g, "");
-} catch (e) {
-  console.warn("Not running on EC2 or metadata not accessible");
-}
 // Compose Slack message
 const systemReport = `
+******************************************************************** ********************************************************************
 :robot_face: *EC2 Instance Health Report*
-
-• *Instance ID*: ${instanceId}
-• *Instance Type*: ${instanceType}
-• *Region*: ${region}
 • *Uptime*: ${uptime} mins
 
 :bar_chart: *Node.js Memory Usage*
@@ -68,10 +43,7 @@ const systemReport = `
 `;
 
 axios
-  .post(
-    process.env.SLACK_WEBHOOK,
-    { text: systemReport }
-  )
+  .post(process.env.SLACK_WEBHOOK, { text: systemReport })
   .then(() => {
     console.log("EC2 system report sent to Slack!");
   })
