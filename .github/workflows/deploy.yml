@@ -2,7 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]  # Change 'main' if your branch is named differently
+    branches: [ master ]  # Change 'main' if your branch is named differently
 
 jobs:
   deploy:
