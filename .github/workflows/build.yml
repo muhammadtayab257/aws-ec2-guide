@@ -1,5 +1,6 @@
 name: Deploy to EC2
 
+# Trigger this workflow on push to the master branch
 on:
   push:
     branches:
@@ -7,31 +8,40 @@ on:
 
 jobs:
   deploy:
+    name: Deploy Node.js App to EC2
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # Step 1: Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        # This action fetches the repository content so we can deploy it
 
-      - name: SSH into EC2 and Deploy
-        uses: appleboy/ssh-action@v0.1.10
+      # Step 2: SSH into the EC2 server and deploy
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.6
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}          # EC2 server IP or hostname
+          username: ${{ secrets.EC2_USERNAME }}  # SSH username
+          key: ${{ secrets.EC2_SSH_KEY }}        # Private SSH key stored in secrets
+          port: 22                               # Default SSH port
           script: |
+            echo "Navigating to project directory"
             cd ${{ secrets.PROJECT_PATH }}
 
-            git pull
+            echo "Pulling latest code from master"
+            git pull origin master
+
+            echo "Installing dependencies"
             npm install
 
-            # Start or restart PM2 safely
-            if pm2 list | grep -q "myapp"; then
-              echo "PM2 process found. Restarting..."
-              pm2 restart myapp
+            echo "Checking if pm2 process exists"
+            if pm2 list | grep -q "index"; then
+              echo "Restarting existing pm2 process"
+              pm2 restart index.js
             else
-              echo "PM2 process NOT found. Starting new app..."
-              pm2 start index.js --name myapp
+              echo "Starting pm2 process for the first time"
+              pm2 start index.js --name index
             fi
 
-            pm2 save
+            echo "Deployment completed successfully"
