@@ -31,7 +31,7 @@ jobs:
               pm2 restart myapp
             else
               echo "PM2 process NOT found. Starting new app..."
-              pm2 start app.js --name myapp
+              pm2 start index.js --name myapp
             fi
 
             pm2 save
