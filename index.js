@@ -9,6 +9,6 @@ app.get("/", (req, res) => {
 });
 
 // Listen on all network interfaces
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, "localhost", () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
