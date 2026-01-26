@@ -1,0 +1,37 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - master   # Trigger workflow on pushes to master branch
+
+jobs:
+  deploy:
+    name: Deploy Application to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      # -------------------------------
+      # 1. Checkout the Repository
+      # -------------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        # This pulls the latest code from the repository into the workflow runner
+
+      # -------------------------------------------------------
+      # 2. Connect to EC2 via SSH and Run Deployment Commands
+      # -------------------------------------------------------
+      - name: SSH into EC2 and Deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}          # EC2 public IP or hostname
+          username: ${{ secrets.EC2_USERNAME }}  # EC2 username (e.g., ubuntu, ec2-user)
+          key: ${{ secrets.EC2_SSH_KEY }}        # Private SSH key stored in GitHub Secrets
+          script: |
+            cd ${{ secrets.PROJECT_PATH }}       # Navigate to your project folder
+            git pull                             # Pull latest changes
+            npm install                          # Install updated dependencies
+            pm2 restart all                      # Restart app using PM2
+
+            # You can also use a specific process name:
+            # pm2 restart my-app-name
